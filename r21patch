@@ -1,5 +1,6 @@
 #!/usr/bin/env python2
 import argparse
+import hashlib
 import os
 import shutil
 import subprocess
@@ -18,11 +19,19 @@ def smoggpaths(songdir):
     return smpath, oggpath
 
 def shrinkogg(oggdest):
-    cmd = ['oggdec', oggdest, '-o', oggdest + '.wav']
-    subprocess.check_call(cmd)
-    cmd = ['oggenc', oggdest + '.wav', '-b', '100', '-o', oggdest]
-    subprocess.check_call(cmd)
-    os.unlink(oggdest + '.wav')
+    with open(oggdest, 'rb') as f:
+        h = hashlib.md5(f.read()).hexdigest()
+    path = os.path.join(os.getenv('HOME'), '.smtools')
+    if not os.path.exists(path):
+        os.mkdir(path)
+    oggpath = os.path.join(path, '%s.ogg' % h)
+    if not os.path.exists(oggpath):
+        wavpath = os.path.join(path, '%s.wav' % h)
+        cmd = ['oggdec', oggdest, '-o', wavpath]
+        subprocess.check_call(cmd)
+        cmd = ['oggenc', wavpath, '-b', '100', '-o', oggpath]
+        subprocess.check_call(cmd)
+    shutil.copyfile(oggpath, oggdest)
 
 def r21patch(songdir, destpath):
     smpath, oggpath = smoggpaths(songdir)
