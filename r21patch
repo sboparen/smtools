@@ -1,0 +1,59 @@
+#!/usr/bin/env python2
+import argparse
+import os
+import shutil
+import subprocess
+
+def smoggpaths(songdir):
+    smpaths = []
+    oggpaths = []
+    for name in os.listdir(songdir):
+        path = os.path.join(songdir, name)
+        if path.endswith('.sm'):
+            smpaths.append(path)
+        if path.endswith('.ogg'):
+            oggpaths.append(path)
+    smpath, = smpaths
+    oggpath, = oggpaths
+    return smpath, oggpath
+
+def shrinkogg(oggdest):
+    cmd = ['oggdec', oggdest, '-o', oggdest + '.wav']
+    subprocess.check_call(cmd)
+    cmd = ['oggenc', oggdest + '.wav', '-b', '100', '-o', oggdest]
+    subprocess.check_call(cmd)
+    os.unlink(oggdest + '.wav')
+
+def r21patch(songdir, destpath):
+    smpath, oggpath = smoggpaths(songdir)
+    smdest = os.path.join(destpath, os.path.basename(smpath))
+    oggdest = os.path.join(destpath, os.path.basename(oggpath))
+    shutil.copyfile(smpath, smdest)
+    shutil.copyfile(oggpath, oggdest)
+    if os.path.getsize(smdest) > 100e3:
+        assert False, 'sm file too big'
+    if os.path.getsize(oggdest) > 5e6:
+        shrinkogg(oggdest)
+        if os.path.getsize(oggdest) > 5e6:
+            assert False, 'ogg file still too big'
+
+def main():
+    parser = argparse.ArgumentParser()
+    parser.add_argument('songdirs', nargs='+')
+    parser.add_argument('--destroot', '-d', required=True)
+    args = parser.parse_args()
+    for songdir in args.songdirs:
+        path = os.path.dirname(songdir)
+        songname = os.path.basename(path)
+        path = os.path.dirname(path)
+        packname = os.path.basename(path)
+        destpath = os.path.join(args.destroot, packname)
+        if not os.path.exists(destpath):
+            os.mkdir(destpath)
+        destpath = os.path.join(destpath, songname)
+        if not os.path.exists(destpath):
+            os.mkdir(destpath)
+        r21patch(songdir, destpath)
+
+if __name__ == '__main__':
+    main()
