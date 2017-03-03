@@ -5,6 +5,7 @@ import os
 import shutil
 import subprocess
 
+
 def smoggpaths(songdir):
     smpaths = []
     oggpaths = []
@@ -21,6 +22,7 @@ def smoggpaths(songdir):
     smpath, = smpaths
     oggpath, = oggpaths
     return smpath, oggpath
+
 
 def shrinkogg(oggdest, rate):
     with open(oggdest, 'rb') as f:
@@ -39,6 +41,7 @@ def shrinkogg(oggdest, rate):
         os.rename(oggpath + '.tmp', oggpath)
     shutil.copyfile(oggpath, oggdest)
 
+
 def r21patch(songdir, destpath):
     smpath, oggpath = smoggpaths(songdir)
     smdest = os.path.join(destpath, os.path.basename(smpath))
@@ -51,6 +54,7 @@ def r21patch(songdir, destpath):
         shrinkogg(oggdest, 96)
         if os.path.getsize(oggdest) > 5e6:
             print 'warning: %s ogg file still too big' % songdir
+
 
 def main():
     parser = argparse.ArgumentParser()
@@ -69,6 +73,7 @@ def main():
         if not os.path.exists(destpath):
             os.mkdir(destpath)
         r21patch(songdir, destpath)
+
 
 if __name__ == '__main__':
     main()
