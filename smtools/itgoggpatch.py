@@ -4,8 +4,8 @@ import sys
 
 
 def main():
-    os.chdir(os.path.dirname(__file__))
-    os.execvp('./itgoggpatch', sys.argv)
+    path = os.path.dirname(__file__)
+    os.execvp(os.path.join(path, 'itgoggpatch'), sys.argv)
 
 
 if __name__ == '__main__':
